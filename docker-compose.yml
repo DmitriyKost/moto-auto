@@ -1,0 +1,28 @@
+services: 
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: "moto_auto"
+      POSTGRES_USER: "superadmin"
+      POSTGRES_PASSWORD: "superadmin"
+    volumes:
+      - ./migrations:/docker-entrypoint-initdb.d
+      - pg-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.org
+      PGADMIN_DEFAULT_PASSWORD: admin
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    ports:
+      - 80:80
+      - 5050:5050
+    depends_on:
+      - db 
+
+volumes:
+  pg-data:
+  pgadmin:
