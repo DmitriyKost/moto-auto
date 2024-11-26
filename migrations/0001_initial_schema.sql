@@ -1,4 +1,7 @@
-CREATE SCHEMA IF NOT EXISTS moto_auto;
+begin
+;
+
+CREATE SCHEMA moto_auto;
 
 CREATE TABLE moto_auto.branch (
     branch_id SERIAL PRIMARY KEY,
@@ -14,7 +17,7 @@ CREATE TABLE moto_auto.employee (
     name VARCHAR(100) NOT NULL,
     age INTEGER NOT NULL,
     position VARCHAR(50) NOT NULL,
-    contact_info VARCHAR(100) NOT NULL,
+    contact_info TEXT NOT NULL,
     expirience_years INTEGER NOT NULL,
     salary NUMERIC(15, 2) NOT NULL,
     description TEXT NOT NULL
@@ -32,51 +35,50 @@ CREATE TABLE moto_auto.branch_employee (
 CREATE TABLE moto_auto.client (
     client_id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    contact_info VARCHAR(255),
+    contact_info TEXT NOT NULL,
     status VARCHAR(20) CHECK (status IN ('casual', 'regular', 'premium')),
-    bonus_points INTEGER DEFAULT 0,
-    total_spent NUMERIC(15, 2) DEFAULT 0
+    bonus_points INTEGER NOT NULL DEFAULT 0 ,
+    total_spent NUMERIC(15, 2) NOT NULL DEFAULT 0 
 );
 
 CREATE TABLE moto_auto."order" (
     order_id SERIAL PRIMARY KEY,
     client_id INTEGER REFERENCES moto_auto.client(client_id),
     branch_id INTEGER REFERENCES moto_auto.branch(branch_id),
-    order_date TIMESTAMPTZ DEFAULT NOW(),
-    completion_date TIMESTAMPTZ,
-    total_cost NUMERIC(15, 2),
+    order_date TIMESTAMPTZ NOT NULL DEFAULT NOW() ,
+    completion_date TIMESTAMPTZ NOT NULL,
     status VARCHAR(20) CHECK (status IN ('processing', 'finished', 'cancelled'))
 );
 
 CREATE TABLE moto_auto.service (
     service_id SERIAL PRIMARY KEY,
     service_name VARCHAR(100) NOT NULL,
-    description TEXT
+    description TEXT NOT NULL
 );
 
 CREATE TABLE moto_auto.service_branch (
     service_branch_id SERIAL PRIMARY KEY,
-    price NUMERIC(15, 2),
+    price NUMERIC(15, 2) NOT NULL,
     branch_id INTEGER REFERENCES moto_auto.branch(branch_id) ON DELETE CASCADE
 );
 
 CREATE TABLE moto_auto.spare_part (
     part_id SERIAL PRIMARY KEY,
     part_name VARCHAR(100) NOT NULL,
-    description TEXT
+    description TEXT NOT NULL
 );
 
 CREATE TABLE moto_auto.spare_part_branch (
     spare_part_branch_id SERIAL PRIMARY KEY,
     part_id INTEGER REFERENCES moto_auto.spare_part(part_id) ON DELETE CASCADE,
     branch_id INTEGER REFERENCES moto_auto.branch(branch_id) ON DELETE CASCADE,
-    stock_quantity INTEGER DEFAULT 0,
-    price NUMERIC(15, 2)
+    stock_quantity INTEGER NOT NULL DEFAULT 0,
+    price NUMERIC(15, 2) NOT NULL
 );
 
 CREATE TABLE moto_auto.order_service (
     order_service_id SERIAL PRIMARY KEY,
-    order_id INTEGER REFERENCES moto_auto."order"(order_id) ON DELETE CASCADE,
+    order_id INTEGER REFERENCES moto_auto."order"(order_id),
     service_id INTEGER REFERENCES moto_auto.service(service_id)
 );
 
@@ -91,7 +93,7 @@ CREATE TABLE moto_auto."user" (
     username VARCHAR(50) UNIQUE NOT NULL,
     passwordhash VARCHAR(255) NOT NULL,
     role VARCHAR(20) CHECK (role IN ('admin', 'analyst', 'master', 'manager')),
-    branch_id INTEGER REFERENCES moto_auto.branch(branch_id)
+    branch_id INTEGER REFERENCES moto_auto.branch(branch_id) ON DELETE CASCADE
 );
 
 CREATE TABLE moto_auto.schedule (
@@ -135,3 +137,6 @@ CREATE TRIGGER trigger_update_client_status
 AFTER INSERT OR UPDATE ON moto_auto."order"
 FOR EACH ROW
 EXECUTE FUNCTION update_client_status();
+
+commit
+;
