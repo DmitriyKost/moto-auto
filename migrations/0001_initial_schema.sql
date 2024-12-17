@@ -100,6 +100,7 @@ CREATE TABLE moto_auto.schedule (
     schedule_id SERIAL PRIMARY KEY,
     client_id INTEGER REFERENCES moto_auto.client(client_id) ON DELETE CASCADE,
     branch_id INTEGER REFERENCES moto_auto.branch(branch_id) ON DELETE CASCADE,
+    order_id INTEGER REFERENCES moto_auto."order"(order_id),
     service_id INTEGER REFERENCES moto_auto.service(service_id),
     preffered_master_id INTEGER REFERENCES moto_auto.employee(employee_id),
     scheduled_datetime TIMESTAMP NOT NULL,
