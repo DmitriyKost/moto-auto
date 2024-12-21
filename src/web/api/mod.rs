@@ -1,7 +1,7 @@
-use axum::{routing::{get, post}, Router};
+use axum::{routing::post, Router};
 use handlers::{admin_update_user, login};
 
-mod common;
+pub mod common;
 mod handlers;
 
 #[cfg(test)]

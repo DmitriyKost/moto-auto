@@ -20,6 +20,7 @@
           pkgs.jq
           pkgs.openssl
           pkgs.pkg-config
+          pkgs.postgresql
         ];
       };
     });

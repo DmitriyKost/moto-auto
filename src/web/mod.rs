@@ -1,14 +1,17 @@
 use api::new_api_router;
-use axum::{Extension, Router};
+use axum::{middleware, Extension, Router};
 use front::new_front_router;
+use middlewares::auth_middleware;
 use session::Cache;
 use sqlx::PgPool;
+use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
 use tower_sessions::{MemoryStore, SessionManagerLayer};
 use tracing::Level;
 
 mod api;
 mod front;
+mod middlewares;
 mod session;
 
 pub enum WebError {
@@ -28,10 +31,14 @@ pub async fn serve(db: PgPool, addr: &str) -> Result<(), WebError> {
     let app = Router::new()
         .nest("/api/v1", new_api_router())
         .nest("", new_front_router())
-        .layer(TraceLayer::new_for_http())
-        .layer(Extension(db))
-        .layer(Extension(cache))
-        .layer(session_layer);
+        .layer(
+            ServiceBuilder::new()
+                .layer(TraceLayer::new_for_http())
+                .layer(Extension(db))
+                .layer(Extension(cache))
+                .layer(session_layer)
+                .layer(middleware::from_fn(auth_middleware))
+        );
 
     let listener = tokio::net::TcpListener::bind(addr)
         .await

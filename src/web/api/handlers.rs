@@ -5,7 +5,7 @@ use tower_sessions::Session;
 use uuid::Uuid;
 
 use crate::{
-    database::user::{create_user, update_user},
+    database::user::{create_user, get_user, update_user},
     models::User,
     web::session::{ApiKey, Cache, API_KEY},
 };
@@ -19,14 +19,27 @@ pub struct LoginForm {
 }
 
 pub async fn login(
+    db: Extension<PgPool>,
     session: Session,
     cache: Extension<Cache>,
-    Form(_login): Form<LoginForm>,
-) -> Result<Redirect, StatusCode> {
-    let apikey = ApiKey(Uuid::new_v4().to_string());
-    session.insert(API_KEY, &apikey).await.unwrap();
-    cache.write().unwrap().insert(apikey.0, "1".to_string());
-    Ok(Redirect::to("/admin"))
+    Form(login): Form<LoginForm>,
+) -> Redirect {
+    if let Ok(user) = get_user(&db, &login.login).await {
+        if sha256::digest(&login.password) == user.passwordhash {
+            let apikey = ApiKey(Uuid::new_v4().to_string());
+            session.insert(API_KEY, &apikey).await.unwrap();
+            cache.write().unwrap().insert(apikey.0, "1".to_string());
+            match user.role.as_ref() {
+                "admin" => return Redirect::to("/admin"),
+                "master" => return Redirect::to("/master"),
+                "analyst" => return Redirect::to("/analyst"),
+                "manager" => return Redirect::to("/manager"),
+                _ => return Redirect::to("/login")
+            }
+            
+        }
+    }
+    Redirect::to("/login")
 }
 
 pub async fn admin_update_user(

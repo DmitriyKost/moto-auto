@@ -28,7 +28,11 @@ async fn admin_branch_check(
     Ok(())
 }
 
-pub async fn create_user(pool: &DbPool, admin_branch_id: i32, user: &User) -> Result<User, DbError> {
+pub async fn create_user(
+    pool: &DbPool,
+    admin_branch_id: i32,
+    user: &User,
+) -> Result<User, DbError> {
     if let Err(err) = admin_branch_check(pool, admin_branch_id, user.username.as_str()).await {
         return Err(err);
     }
@@ -104,6 +108,20 @@ pub async fn delete_user(
     .map(|_| {})
 }
 
+pub async fn get_user(pool: &DbPool, username: &str) -> Result<User, DbError> {
+    sqlx::query_as!(
+        User,
+        r#"
+        SELECT * FROM moto_auto.users
+        WHERE username = $1
+        "#,
+        username,
+    )
+    .fetch_one(pool)
+    .await
+    .map_err(|e| DbError::Sqlx(e))
+}
+
 pub async fn get_users(pool: &DbPool, admin_branch_id: i32) -> Result<Vec<User>, DbError> {
     sqlx::query_as!(
         User,
@@ -117,4 +135,3 @@ pub async fn get_users(pool: &DbPool, admin_branch_id: i32) -> Result<Vec<User>,
     .await
     .map_err(|e| DbError::Sqlx(e))
 }
-

@@ -300,7 +300,7 @@ VALUES
 
 INSERT INTO moto_auto.users (username, passwordhash, role, branch_id)
 VALUES
-('admin1', 'password_hash1', 'admin', 1),
+('admin1', 'b56a96a2daa2d0e13bfed0ab5ed2e56fd2152682e8b078515e6058f0f301a059', 'admin', 1),
 ('analyst1', 'password_hash2', 'analyst', 2),
 ('manager1', 'password_hash3', 'manager', 3),
 ('master1', 'password_hash4', 'master', 1);
