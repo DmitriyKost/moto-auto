@@ -18,6 +18,9 @@
       devShells.default = pkgs.mkShell {
         buildInputs = [
           pkgs.jq
+          pkgs.openssl
+          pkgs.pkg-config
+          pkgs.postgresql
         ];
       };
     });
