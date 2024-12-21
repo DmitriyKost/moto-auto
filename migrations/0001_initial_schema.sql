@@ -238,7 +238,7 @@ AFTER INSERT OR UPDATE ON moto_auto.branch_employee
 FOR EACH ROW
 EXECUTE FUNCTION increment_employee_count();
 
-CREATE ROLE analyst WITH LOGIN PASSWORD 'analyst_password';
+CREATE ROLE analyst;
 
 DO $$
 DECLARE
