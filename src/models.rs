@@ -46,7 +46,7 @@ pub struct Client {
     pub name: String,
     pub contact_info: String,
     pub status: String,
-    pub bonus_points: BigDecimal,
+    pub bonus_points: Option<BigDecimal>,
     pub total_spent: BigDecimal,
 }
 

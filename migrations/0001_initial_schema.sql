@@ -41,7 +41,7 @@ CREATE TABLE moto_auto.client (
     name VARCHAR(100) NOT NULL,
     contact_info TEXT NOT NULL,
     status VARCHAR(20) NOT NULL CHECK (status IN ('casual', 'regular', 'premium')),
-    bonus_points NUMERIC(15, 2) NOT NULL DEFAULT 0,
+    bonus_points NUMERIC(15, 2) DEFAULT 0,
     total_spent NUMERIC(15, 2) NOT NULL DEFAULT 0 
 );
 
@@ -170,8 +170,8 @@ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION add_bonus_points_by_status()
 RETURNS TRIGGER AS $$
 DECLARE
-    bonus_multiplier NUMERIC := 1; 
-    bonus_points INTEGER;          
+    bonus_multiplier NUMERIC := 0;
+    calculated_bonus_points INTEGER;
 BEGIN
     IF (NEW.status = 'finished' AND (TG_OP = 'INSERT' OR OLD.status != 'finished')) THEN
         SELECT CASE
@@ -182,10 +182,10 @@ BEGIN
         FROM moto_auto.client c
         WHERE c.client_id = NEW.client_id;
 
-        bonus_points := FLOOR(NEW.total_amount * bonus_multiplier);
+        calculated_bonus_points := FLOOR(NEW.total_amount * bonus_multiplier);
 
         UPDATE moto_auto.client
-        SET bonus_points = bonus_points + bonus_points
+        SET bonus_points = COALESCE(bonus_points, 0) + calculated_bonus_points
         WHERE client_id = NEW.client_id;
     END IF;
 
@@ -273,5 +273,4 @@ GRANT SELECT ON TABLES TO analyst;
 
 ALTER DEFAULT PRIVILEGES IN SCHEMA moto_auto
 GRANT SELECT ON SEQUENCES TO analyst;
-
 COMMIT;
