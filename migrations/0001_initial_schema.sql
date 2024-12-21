@@ -199,6 +199,29 @@ AFTER INSERT OR UPDATE ON moto_auto.orders
 FOR EACH ROW
 WHEN (NEW.status = 'finished') 
 EXECUTE FUNCTION add_bonus_points_by_status();
+
+CREATE OR REPLACE FUNCTION increment_employee_count()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'UPDATE' AND OLD.branch_id IS DISTINCT FROM NEW.branch_id THEN
+        UPDATE moto_auto.branch
+        SET employee_count = employee_count - 1
+        WHERE branch_id = OLD.branch_id;
+    END IF;
+
+    UPDATE moto_auto.branch
+    SET employee_count = employee_count + 1
+    WHERE branch_id = NEW.branch_id;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_increment_employee_count
+AFTER INSERT OR UPDATE ON moto_auto.branch_employee
+FOR EACH ROW
+EXECUTE FUNCTION increment_employee_count();
+
 CREATE ROLE analyst WITH LOGIN PASSWORD 'analyst_password';
 
 DO $$
