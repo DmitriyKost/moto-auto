@@ -12,6 +12,14 @@ CREATE TABLE moto_auto.branch (
     city VARCHAR(100) NOT NULL
 );
 
+CREATE TABLE moto_auto.users (
+    user_id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    passwordhash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL CHECK (role IN ('admin', 'analyst', 'master', 'manager')),
+    branch_id INTEGER NOT NULL REFERENCES moto_auto.branch(branch_id) ON DELETE CASCADE
+);
+
 CREATE TABLE moto_auto.employee (
     employee_id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -45,8 +53,10 @@ CREATE TABLE moto_auto.orders (
     order_id SERIAL PRIMARY KEY,
     client_id INTEGER NOT NULL REFERENCES moto_auto.client(client_id),
     branch_id INTEGER NOT NULL REFERENCES moto_auto.branch(branch_id),
+    master_id INTEGER NOT NULL REFERENCES moto_auto.users(user_id),
     order_date TIMESTAMPTZ NOT NULL DEFAULT NOW() ,
-    completion_date TIMESTAMPTZ NOT NULL,
+    completion_date TIMESTAMPTZ,
+    total_amount NUMERIC(15, 2),
     status VARCHAR(20) NOT NULL CHECK (status IN ('processing', 'finished', 'cancelled'))
 );
 
@@ -90,24 +100,53 @@ CREATE TABLE moto_auto.order_service_part (
     quantity INTEGER NOT NULL DEFAULT 1
 );
 
-CREATE TABLE moto_auto.users (
-    user_id SERIAL PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    passwordhash VARCHAR(255) NOT NULL,
-    role VARCHAR(20) NOT NULL CHECK (role IN ('admin', 'analyst', 'master', 'manager')),
-    branch_id INTEGER NOT NULL REFERENCES moto_auto.branch(branch_id) ON DELETE CASCADE
-);
 
 CREATE TABLE moto_auto.schedule (
     schedule_id SERIAL PRIMARY KEY,
     client_id INTEGER NOT NULL REFERENCES moto_auto.client(client_id) ON DELETE CASCADE,
     branch_id INTEGER NOT NULL REFERENCES moto_auto.branch(branch_id) ON DELETE CASCADE,
     order_id INTEGER NOT NULL REFERENCES moto_auto.orders(order_id),
-    preffered_master_id INTEGER REFERENCES moto_auto.employee(employee_id),
-    scheduled_datetime TIMESTAMP NOT NULL,
+    scheduled_datetime TIMESTAMPTZ NOT NULL,
     status VARCHAR(20) NOT NULL CHECK (Status IN ('confirmed', 'pending', 'cancelled'))
 );
 
+CREATE OR REPLACE FUNCTION calculate_total_amount()
+RETURNS TRIGGER AS $$
+DECLARE
+    service_total NUMERIC(15, 2) := 0;
+    part_total NUMERIC(15, 2) := 0;
+BEGIN
+    SELECT COALESCE(SUM(sb.price), 0) INTO service_total
+    FROM moto_auto.order_service os
+    INNER JOIN moto_auto.service_branch sb
+    ON os.service_id = sb.service_id
+    WHERE os.order_id = NEW.order_id;
+
+    SELECT COALESCE(SUM(spb.price * osp.quantity), 0) INTO part_total
+    FROM moto_auto.order_service_part osp
+    INNER JOIN moto_auto.spare_part_branch spb
+    ON osp.part_id = spb.part_id
+    INNER JOIN moto_auto.order_service os
+    ON osp.order_service_id = os.order_service_id
+    WHERE os.order_id = NEW.order_id;
+
+    UPDATE moto_auto.orders
+    SET total_amount = service_total + part_total
+    WHERE order_id = NEW.order_id;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_calculate_total_amount_order_service
+AFTER INSERT OR UPDATE ON moto_auto.order_service
+FOR EACH ROW
+EXECUTE FUNCTION calculate_total_amount();
+
+CREATE TRIGGER trigger_calculate_total_amount_order_service_part
+AFTER INSERT OR UPDATE ON moto_auto.order_service_part
+FOR EACH ROW
+EXECUTE FUNCTION calculate_total_amount();
 -- Статус клиента определяется автоматически по количеству потраченных на услуги
 -- сервиса денег.
 create or replace function update_client_status()

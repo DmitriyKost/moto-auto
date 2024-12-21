@@ -55,8 +55,10 @@ pub struct Order {
     pub order_id: Option<i32>,
     pub client_id: i32,
     pub branch_id: i32,
+    pub master_id: i32,
     pub order_date: chrono::DateTime<chrono::Utc>,
-    pub completion_date: chrono::DateTime<chrono::Utc>,
+    pub completion_date: Option<chrono::DateTime<chrono::Utc>>,
+    pub total_amount: Option<BigDecimal>,
     pub status: String,
 }
 
@@ -72,6 +74,7 @@ pub struct ServiceBranch {
     pub service_branch_id: Option<i32>,
     pub price: BigDecimal,
     pub branch_id: i32,
+    pub service_id: i32,
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
@@ -101,6 +104,7 @@ pub struct OrderService {
 pub struct OrderServicePart {
     pub order_service_part_id: Option<i32>,
     pub part_id: i32,
+    pub order_service_id: i32,
     pub quantity: i32,
 }
 
@@ -110,7 +114,6 @@ pub struct Schedule {
     pub client_id: i32,
     pub branch_id: i32,
     pub order_id: i32,
-    pub preffered_master_id: i32,
     pub scheduled_datetime: chrono::DateTime<chrono::Utc>,
     pub status: String,
 }

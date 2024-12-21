@@ -1,5 +1,8 @@
+use crate::{
+    database::{DbError, DbPool},
+    models::Branch,
+};
 use log::error;
-use crate::{database::{DbError, DbPool}, models::Branch};
 
 pub async fn create_branch(pool: &DbPool, branch: Branch) -> Result<Branch, DbError> {
     let branch = sqlx::query_as!(
@@ -16,10 +19,11 @@ pub async fn create_branch(pool: &DbPool, branch: Branch) -> Result<Branch, DbEr
         branch.city,
     )
     .fetch_one(pool)
-    .await.map_err(|e| DbError::Sqlx(e));
+    .await
+    .map_err(|e| DbError::Sqlx(e));
     if let Err(_) = branch {
         error!("Error creating new branch");
-        return branch
+        return branch;
     }
     let branch = branch.unwrap();
     if let Err(e) = sqlx::query!(
@@ -33,14 +37,22 @@ pub async fn create_branch(pool: &DbPool, branch: Branch) -> Result<Branch, DbEr
         branch.branch_id
     )
     .execute(pool)
-    .await {
+    .await
+    {
         error!("Error creating default admin");
-        return Err(DbError::Sqlx(e))
+        return Err(DbError::Sqlx(e));
     }
-    return Ok(branch)
+    return Ok(branch);
 }
 
-pub async fn update_branch(pool: &DbPool, admin_branch_id: i32, address: Option<&str>, phone_number: Option<&str>, postal_code: Option<&str>, employee_count: Option<i32>) -> Result<Branch, DbError> {
+pub async fn update_branch(
+    pool: &DbPool,
+    admin_branch_id: i32,
+    address: Option<&str>,
+    phone_number: Option<&str>,
+    postal_code: Option<&str>,
+    employee_count: Option<i32>,
+) -> Result<Branch, DbError> {
     sqlx::query_as!(
         Branch,
         r#"
@@ -60,6 +72,38 @@ pub async fn update_branch(pool: &DbPool, admin_branch_id: i32, address: Option<
         admin_branch_id
     )
     .fetch_one(pool)
-    .await.map_err(|e| DbError::Sqlx(e))
+    .await
+    .map_err(|e| DbError::Sqlx(e))
+}
 
+pub async fn get_branch(
+    pool: &DbPool,
+    city: Option<&str>,
+) -> Result<Vec<Branch>, DbError> {
+    match city {
+        Some(city) => {
+            sqlx::query_as!(
+                Branch,
+                r#"
+                SELECT * FROM moto_auto.branch
+                WHERE city = $1
+                "#,
+                city
+            )
+            .fetch_all(pool)
+            .await
+            .map_err(|e| DbError::Sqlx(e))
+        },
+        None => {
+            sqlx::query_as!(
+                Branch,
+                r#"
+                SELECT * FROM moto_auto.branch
+                "#,
+            )
+            .fetch_all(pool)
+            .await
+            .map_err(|e| DbError::Sqlx(e))
+        }
+    }
 }
