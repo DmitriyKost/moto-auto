@@ -96,14 +96,13 @@ CREATE TABLE moto_auto.order_service_part (
     quantity INTEGER NOT NULL DEFAULT 1
 );
 
-
 CREATE TABLE moto_auto.schedule (
     schedule_id SERIAL PRIMARY KEY,
     client_id INTEGER NOT NULL REFERENCES moto_auto.client(client_id) ON DELETE CASCADE,
     branch_id INTEGER NOT NULL REFERENCES moto_auto.branch(branch_id) ON DELETE CASCADE,
     order_id INTEGER NOT NULL REFERENCES moto_auto.orders(order_id),
     scheduled_datetime TIMESTAMPTZ NOT NULL,
-    status VARCHAR(20) NOT NULL CHECK (Status IN ('confirmed', 'pending', 'cancelled'))
+    status VARCHAR(20) NOT NULL CHECK (status IN ('confirmed', 'pending', 'cancelled'))
 );
 
 CREATE OR REPLACE FUNCTION calculate_total_amount()
