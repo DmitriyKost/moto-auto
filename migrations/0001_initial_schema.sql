@@ -1,7 +1,6 @@
 BEGIN;
 
 CREATE SCHEMA moto_auto;
-CREATE EXTENSION pg_cron;
 
 CREATE TABLE moto_auto.branch (
     branch_id SERIAL PRIMARY KEY,
@@ -239,7 +238,7 @@ AFTER INSERT OR UPDATE ON moto_auto.branch_employee
 FOR EACH ROW
 EXECUTE FUNCTION increment_employee_count();
 
-CREATE OR REPLACE FUNCTION expire_bonus_points()
+CREATE OR REPLACE FUNCTION expire_bonus_points() -- TODO lauch it in application
 RETURNS VOID AS $$
 BEGIN
     IF EXTRACT(MONTH FROM CURRENT_DATE) = 1 AND EXTRACT(DAY FROM CURRENT_DATE) = 1 THEN
@@ -249,11 +248,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
-SELECT cron.schedule('0 0 1 1 *', 'SELECT expire_bonus_points();');
-
 CREATE ROLE analyst;
-
 DO $$
 DECLARE
     tbl RECORD;
