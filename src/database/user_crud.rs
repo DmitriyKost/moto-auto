@@ -1,12 +1,10 @@
+use log::error;
+
 use crate::models::User;
-use crate::database::DbPool;
+use crate::database::{DbPool, DbError};
 
-pub enum DbError {
-    Sqlx(sqlx::Error),
-    NotPermitted
-}
 
-pub async fn admin_branch_check(pool: &DbPool, admin_branch_id: i32, username: &str) -> Result<(), DbError> {
+async fn admin_branch_check(pool: &DbPool, admin_branch_id: i32, username: &str) -> Result<(), DbError> {
     let branch_id = sqlx::query_scalar!(
         r#"
         SELECT branch_id FROM moto_auto.users
@@ -17,6 +15,7 @@ pub async fn admin_branch_check(pool: &DbPool, admin_branch_id: i32, username: &
     .fetch_one(pool)
     .await;
     if branch_id.is_err() {
+        error!("Error fetching branch_id with username: {}", username);
         return Err(DbError::Sqlx(branch_id.err().unwrap()))
     }
     let branch_id = branch_id.unwrap();

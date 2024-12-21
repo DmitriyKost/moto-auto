@@ -1,3 +1,4 @@
+use bigdecimal::BigDecimal;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
@@ -28,7 +29,7 @@ pub struct Employee {
     pub position: String,
     pub contact_info: String,
     pub expirience_years: i32,
-    pub salary: f64,
+    pub salary: BigDecimal,
     pub description: String,
 }
 
@@ -46,7 +47,7 @@ pub struct Client {
     pub contact_info: String,
     pub status: String,
     pub bonus_points: i32,
-    pub total_spent: i32,
+    pub total_spent: BigDecimal,
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
@@ -69,7 +70,7 @@ pub struct Service {
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct ServiceBranch {
     pub service_branch_id: Option<i32>,
-    pub price: f64,
+    pub price: BigDecimal,
     pub branch_id: i32,
 }
 
@@ -86,7 +87,7 @@ pub struct SparePartBranch {
     pub part_id: i32,
     pub branch_id: i32,
     pub stock_quantity: i32,
-    pub price: f64,
+    pub price: BigDecimal,
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]

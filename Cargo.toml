@@ -4,7 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+bigdecimal = { version = "0.4.7", features = ["serde"] }
 chrono = { version = "0.4.39", features = ["serde"] }
+log = "0.4.22"
 serde = "1.0.216"
-sqlx = { version = "0.8.2", features = ["chrono", "postgres", "runtime-tokio-native-tls"] }
+sqlx = { version = "0.8.2", features = ["bigdecimal", "chrono", "postgres", "runtime-tokio-native-tls"] }
 tokio = { version = "1.42.0", features = ["full"] }
