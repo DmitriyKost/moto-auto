@@ -63,5 +63,3 @@ pub async fn update_branch(pool: &DbPool, admin_branch_id: i32, address: Option<
     .await.map_err(|e| DbError::Sqlx(e))
 
 }
-
-pub async fn
