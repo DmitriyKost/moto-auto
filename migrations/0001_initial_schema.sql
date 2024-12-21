@@ -179,5 +179,57 @@ AFTER INSERT OR UPDATE ON moto_auto.orders
 FOR EACH ROW
 EXECUTE FUNCTION update_client_status();
 
-commit
-;
+CREATE ROLE analyst WITH LOGIN PASSWORD 'analyst_password';
+
+DO $$
+DECLARE
+    tbl RECORD;
+BEGIN
+    FOR tbl IN
+        SELECT tablename
+        FROM pg_tables
+        WHERE schemaname = 'moto_auto' AND tablename != 'users'
+    LOOP
+        EXECUTE format('GRANT SELECT ON TABLE moto_auto.%I TO analyst;', tbl.tablename);
+    END LOOP;
+END;
+$$;
+
+DO $$
+DECLARE
+    tbl RECORD;
+BEGIN
+    FOR tbl IN
+        SELECT tablename
+        FROM pg_tables
+        WHERE schemaname = 'moto_auto'
+    LOOP
+        EXECUTE format('REVOKE INSERT, UPDATE, DELETE ON TABLE moto_auto.%I FROM analyst;', tbl.tablename);
+    END LOOP;
+END;
+$$;
+
+REVOKE ALL PRIVILEGES ON TABLE moto_auto.users FROM analyst;
+
+DO $$
+DECLARE
+    seq RECORD;
+BEGIN
+    FOR seq IN
+        SELECT sequence_name
+        FROM information_schema.sequences
+        WHERE sequence_schema = 'moto_auto'
+    LOOP
+        EXECUTE format('GRANT SELECT ON SEQUENCE moto_auto.%I TO analyst;', seq.sequence_name);
+        EXECUTE format('REVOKE USAGE, UPDATE ON SEQUENCE moto_auto.%I FROM analyst;', seq.sequence_name);
+    END LOOP;
+END;
+$$;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA moto_auto
+GRANT SELECT ON TABLES TO analyst;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA moto_auto
+GRANT SELECT ON SEQUENCES TO analyst;
+
+commit;
