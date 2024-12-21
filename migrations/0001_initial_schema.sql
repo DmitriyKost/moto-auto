@@ -1,5 +1,4 @@
-begin
-;
+BEGIN;
 
 CREATE SCHEMA moto_auto;
 
@@ -31,9 +30,6 @@ CREATE TABLE moto_auto.employee (
     description TEXT NOT NULL
 );
 
--- Сотрудник может работать в нескольких филиалах только в том случае,
--- если они расположены в одном городе, его данные должны быть доступны во всех
--- соответствующих авто и/или мото сервисах.
 CREATE TABLE moto_auto.branch_employee (
     branch_employee_id SERIAL PRIMARY KEY,
     employee_id INTEGER NOT NULL REFERENCES moto_auto.employee(employee_id) ON DELETE CASCADE,
@@ -45,7 +41,7 @@ CREATE TABLE moto_auto.client (
     name VARCHAR(100) NOT NULL,
     contact_info TEXT NOT NULL,
     status VARCHAR(20) NOT NULL CHECK (status IN ('casual', 'regular', 'premium')),
-    bonus_points INTEGER NOT NULL DEFAULT 0 ,
+    bonus_points NUMERIC(15, 2) NOT NULL DEFAULT 0,
     total_spent NUMERIC(15, 2) NOT NULL DEFAULT 0 
 );
 
@@ -147,11 +143,10 @@ CREATE TRIGGER trigger_calculate_total_amount_order_service_part
 AFTER INSERT OR UPDATE ON moto_auto.order_service_part
 FOR EACH ROW
 EXECUTE FUNCTION calculate_total_amount();
--- Статус клиента определяется автоматически по количеству потраченных на услуги
--- сервиса денег.
-create or replace function update_client_status()
-returns trigger
-as $$
+
+CREATE OR REPLACE FUNCTION update_client_status()
+RETURNS TRIGGER
+AS $$
 DECLARE
     total_spent NUMERIC(15, 2);
 BEGIN
@@ -171,14 +166,39 @@ BEGIN
     RETURN NEW;
 END;
 $$
-language plpgsql
-;
+LANGUAGE plpgsql;
 
-CREATE TRIGGER trigger_update_client_status
+CREATE OR REPLACE FUNCTION add_bonus_points_by_status()
+RETURNS TRIGGER AS $$
+DECLARE
+    bonus_multiplier NUMERIC := 1; 
+    bonus_points INTEGER;          
+BEGIN
+    IF (NEW.status = 'finished' AND (TG_OP = 'INSERT' OR OLD.status != 'finished')) THEN
+        SELECT CASE
+            WHEN c.status = 'casual' THEN 0.1
+            WHEN c.status = 'regular' THEN 0.2
+            WHEN c.status = 'premium' THEN 0.3
+        END INTO bonus_multiplier
+        FROM moto_auto.client c
+        WHERE c.client_id = NEW.client_id;
+
+        bonus_points := FLOOR(NEW.total_amount * bonus_multiplier);
+
+        UPDATE moto_auto.client
+        SET bonus_points = bonus_points + bonus_points
+        WHERE client_id = NEW.client_id;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_add_bonus_points_by_status
 AFTER INSERT OR UPDATE ON moto_auto.orders
 FOR EACH ROW
-EXECUTE FUNCTION update_client_status();
-
+WHEN (NEW.status = 'finished') 
+EXECUTE FUNCTION add_bonus_points_by_status();
 CREATE ROLE analyst WITH LOGIN PASSWORD 'analyst_password';
 
 DO $$
@@ -232,4 +252,4 @@ GRANT SELECT ON TABLES TO analyst;
 ALTER DEFAULT PRIVILEGES IN SCHEMA moto_auto
 GRANT SELECT ON SEQUENCES TO analyst;
 
-commit;
+COMMIT;

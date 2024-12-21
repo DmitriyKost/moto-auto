@@ -3,9 +3,7 @@ use chrono;
 use crate::database::{DbError, DbPool};
 use crate::models::Order;
 
-use super::branch;
-
-pub async fn create_Order(pool: &DbPool, order: Order) -> Result<Order, DbError> {
+pub async fn create_order(pool: &DbPool, order: Order) -> Result<Order, DbError> {
     sqlx::query_as!(
         Order,
         r#"
