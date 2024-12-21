@@ -3,7 +3,7 @@ use axum::extract::Query;
 use crate::models::User;
 use crate::web::front::views::AdminIndex;
 
-use super::views::UserEdit;
+use super::views::{Login, UserEdit};
 
 pub async fn admin_index() -> AdminIndex {
     AdminIndex {
@@ -19,4 +19,8 @@ pub async fn admin_index() -> AdminIndex {
 
 pub async fn user_edit(Query(user): Query<User>) -> UserEdit {
     UserEdit { user }
+}
+
+pub async fn login() -> Login {
+    Login{}
 }

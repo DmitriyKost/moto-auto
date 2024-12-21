@@ -13,3 +13,7 @@ pub struct AdminIndex {
 pub struct UserEdit {
     pub user: User,
 }
+
+#[derive(Template)]
+#[template(path = "login.html")]
+pub struct Login {}
