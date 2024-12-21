@@ -1,19 +1,13 @@
-use axum::{extract, http::Response};
-use chrono::{DateTime, Utc};
-use serde::Deserialize;
+use axum::{http::StatusCode, Form};
+use log::info;
+
+use crate::models::User;
 
 pub async fn index() -> &'static str {
     "Hello, web!"
 }
-#[derive(Deserialize)]
-struct Scheudle {
-    client_id: i128,
-    order_id: i128,
-    book_at: DateTime<Utc>,
-    branch_id: i128,
-    master_id: i128,
-}
 
-pub fn schedule_posts(extract::Json(schedule): extract::Json<Scheudle>) -> Response<String> {
-    todo!()
+pub async fn admin_update_user(Form(user): Form<User>) -> StatusCode{
+    info!("{:?}", user);
+    StatusCode::OK
 }

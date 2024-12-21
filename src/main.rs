@@ -10,7 +10,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .connect("postgres://localhost:5432/moto_auto?user=superadmin&password=superadmin")
         .await?;
 
-    let _ = serve("127.0.0.1:8080").await?;
+    let _ = serve("127.0.0.1:8080").await;
 
     Ok(())
 }
