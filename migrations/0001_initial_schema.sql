@@ -402,7 +402,8 @@ DECLARE
 BEGIN
     FOR i IN 1..5000 LOOP
         UPDATE moto_auto.orders
-        SET status = 'finished'
+        SET status = 'finished',
+        completion_date = NOW()
         WHERE order_id = i
         AND total_amount IS NOT NULL;
     END LOOP;
