@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Admin</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
+        <script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
+    </head>
+    <body>
+        <div class="flex flex-col min-h-screen">
+            <div class="flex flex-row gap-4">
+                {% include "order_list.html" %}
+                <div id="order_view"/>
+            </div>
+        </div>
+    </body>
+</html>

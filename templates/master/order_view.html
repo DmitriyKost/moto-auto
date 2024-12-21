@@ -1,0 +1,24 @@
+<div class="flex-grow flex flex-col" hx-include="this">
+    <label for="order_id">order_id:</label>
+    <input type="text" value="{{ order.order_id.unwrap_or_default() }}" id="order_id" name="order_id" class="bg-cyan-100 rounded-lg er-cyan-400" readonly/>
+    <label for="client_id">client_id:</label>
+    <input type="text" value="{{ order.client_id }}" id="client_id" name="client_id" class="bg-cyan-100 rounded-lg er-cyan-400" readonly/>
+    <label for="branch_id">branch_id:</label>
+    <input type="text" value="{{ order.branch_id }}" id="branch_id" name="branch_id" class="bg-cyan-100 rounded-lg er-cyan-400" readonly/>
+    <label for="master_id">master_id:</label>
+    <input type="text" value="{{ order.master_id }}" id="master_id" name="master_id" class="bg-cyan-100 rounded-lg er-cyan-400" readonly/>
+    <label for="order_date">order_date:</label>
+    <input type="text" value="{{ order.order_date }}" id="order_date" name="order_date" class="bg-cyan-100 rounded-lg er-cyan-400" readonly/>
+    <label for="completion_date">completion_date:</label>
+    <input type="text" value="{{ order.completion_date.unwrap_or_default() }}" id="completion_date" name="completion_date" class="bg-cyan-100 rounded-lg er-cyan-400" readonly/>
+    <label for="total_amount">total_amount:</label>
+    <input type="text" value="{{ order.total_amount.clone().unwrap_or_default() }}" id="total_amount" name="total_amount" class="bg-cyan-100 rounded-lg er-cyan-400" readonly/>
+    <label for="status">status:</label>
+    <input type="text" value="{{ order.status }}" id="status" name="status" class="bg-cyan-100 rounded-lg er-cyan-400" readonly/>
+    <button type="button" 
+        hx-post="/api/v1/master/complete_order?order_id={{order.order_id.unwrap_or_default()}}"
+        class="rounded-lg bg-cyan-600 w-full">
+        Complete order
+    </button>
+</div>
+

@@ -28,7 +28,7 @@ pub async fn login(
         if sha256::digest(&login.password) == user.passwordhash {
             let apikey = ApiKey(Uuid::new_v4().to_string());
             session.insert(API_KEY, &apikey).await.unwrap();
-            cache.write().unwrap().insert(apikey.0, "1".to_string());
+            cache.write().unwrap().insert(apikey.0, user.user_id.unwrap().to_string());
             match user.role.as_ref() {
                 "admin" => return Redirect::to("/admin"),
                 "master" => return Redirect::to("/master"),
