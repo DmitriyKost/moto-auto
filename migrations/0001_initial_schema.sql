@@ -238,58 +238,102 @@ AFTER INSERT OR UPDATE ON moto_auto.branch_employee
 FOR EACH ROW
 EXECUTE FUNCTION increment_employee_count();
 
-CREATE ROLE analyst WITH LOGIN PASSWORD 'analyst_password';
-
-DO $$
-DECLARE
-    tbl RECORD;
+CREATE OR REPLACE FUNCTION expire_bonus_points() -- TODO lauch it in application
+RETURNS VOID AS $$
 BEGIN
-    FOR tbl IN
-        SELECT tablename
-        FROM pg_tables
-        WHERE schemaname = 'moto_auto' AND tablename != 'users'
-    LOOP
-        EXECUTE format('GRANT SELECT ON TABLE moto_auto.%I TO analyst;', tbl.tablename);
-    END LOOP;
+    IF EXTRACT(MONTH FROM CURRENT_DATE) = 1 AND EXTRACT(DAY FROM CURRENT_DATE) = 1 THEN
+        UPDATE moto_auto.client
+        SET bonus_points = 0;
+    END IF;
 END;
-$$;
+$$ LANGUAGE plpgsql;
 
-DO $$
-DECLARE
-    tbl RECORD;
-BEGIN
-    FOR tbl IN
-        SELECT tablename
-        FROM pg_tables
-        WHERE schemaname = 'moto_auto'
-    LOOP
-        EXECUTE format('REVOKE INSERT, UPDATE, DELETE ON TABLE moto_auto.%I FROM analyst;', tbl.tablename);
-    END LOOP;
-END;
-$$;
+-- ROLES
+CREATE ROLE admin;
+CREATE ROLE analyst;
+CREATE ROLE master;
+CREATE ROLE manager;
 
-REVOKE ALL PRIVILEGES ON TABLE moto_auto.users FROM analyst;
 
-DO $$
-DECLARE
-    seq RECORD;
-BEGIN
-    FOR seq IN
-        SELECT sequence_name
-        FROM information_schema.sequences
-        WHERE sequence_schema = 'moto_auto'
-    LOOP
-        EXECUTE format('GRANT SELECT ON SEQUENCE moto_auto.%I TO analyst;', seq.sequence_name);
-        EXECUTE format('REVOKE USAGE, UPDATE ON SEQUENCE moto_auto.%I FROM analyst;', seq.sequence_name);
-    END LOOP;
-END;
-$$;
+-- Администраторы имеют полный доступ к системе и могут управлять пользователями
+GRANT ALL PRIVILEGES ON SCHEMA moto_auto TO admin;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA moto_auto TO admin;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA moto_auto TO admin;
+GRANT CREATE ON DATABASE moto_auto TO admin;
 
-ALTER DEFAULT PRIVILEGES IN SCHEMA moto_auto
-GRANT SELECT ON TABLES TO analyst;
+-- Аналитики имеют доступ на чтение из любой таблицы.
+GRANT USAGE ON SCHEMA moto_auto TO analyst;
+GRANT SELECT ON ALL TABLES IN SCHEMA moto_auto TO analyst;
+ALTER DEFAULT PRIVILEGES IN SCHEMA moto_auto GRANT SELECT ON TABLES TO analyst;
 
-ALTER DEFAULT PRIVILEGES IN SCHEMA moto_auto
-GRANT SELECT ON SEQUENCES TO analyst;
+-- Мастера могут просматривать информацию о заказах, клиентах, оборудовании и запчастях, а также вносить данные о выполненной работе.
+GRANT USAGE ON SCHEMA moto_auto TO master;
+GRANT SELECT ON moto_auto.orders TO master;
+GRANT SELECT ON moto_auto.client TO master;
+GRANT SELECT ON moto_auto.spare_part TO master;
+GRANT SELECT ON moto_auto.spare_part_branch TO master;
+
+GRANT UPDATE, INSERT ON moto_auto.orders TO master;
+
+-- В целях безопасности, мастера могут видеть в информационной системе только тех клиентов, с которыми они работают.
+ALTER TABLE moto_auto.client ENABLE ROW LEVEL SECURITY;
+CREATE POLICY master_client_policy ON moto_auto.client
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1
+            FROM moto_auto.orders
+            WHERE moto_auto.orders.client_id = moto_auto.client.client_id
+              AND moto_auto.orders.master_id = (
+                  SELECT user_id
+                  FROM moto_auto.users
+                  WHERE username = current_user AND role = 'master'
+              )
+        )
+    );
+
+ALTER TABLE moto_auto.orders ENABLE ROW LEVEL SECURITY;
+CREATE POLICY master_orders_policy ON moto_auto.orders
+    FOR ALL USING (
+        moto_auto.orders.master_id = (
+            SELECT user_id
+            FROM moto_auto.users
+            WHERE username = current_user AND role = 'master'
+        )
+    );
+
+-- Менеджеры имеют доступ к информации о клиентах, заказах и чеках, могут добавлять новых клиентов и управлять заказами того автосервиса, в котором числятся менеджерами. 
+CREATE POLICY manager_client_policy ON moto_auto.client
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1
+            FROM moto_auto.users
+            WHERE moto_auto.users.branch_id = (
+                SELECT branch_id
+                FROM moto_auto.users
+                WHERE username = current_user AND role = 'manager'
+            )
+        )
+    );
+
+CREATE POLICY manager_orders_policy ON moto_auto.orders
+    FOR ALL USING (
+        moto_auto.orders.branch_id = (
+            SELECT branch_id
+            FROM moto_auto.users
+            WHERE username = current_user AND role = 'manager'
+        )
+    );
+
+-- Администраторы имеют полный доступ к системе, того автосервиса, где числятся администраторами.
+ALTER TABLE moto_auto.users ENABLE ROW LEVEL SECURITY;
+CREATE POLICY admin_user_policy ON moto_auto.users
+    FOR ALL USING (
+        moto_auto.users.branch_id = (
+            SELECT branch_id
+            FROM moto_auto.users
+            WHERE username = current_user AND role = 'admin'
+        )
+    );
 
 -- TEST
 INSERT INTO moto_auto.branch (address, phone_number, postal_code, employee_count, city)
