@@ -335,6 +335,22 @@ CREATE POLICY admin_user_policy ON moto_auto.users
         )
     );
 
+-- Индексы для заказов
+CREATE INDEX idx_orders_client_id ON moto_auto.orders(client_id);
+CREATE INDEX idx_orders_branch_id ON moto_auto.orders(branch_id);
+CREATE INDEX idx_orders_master_id ON moto_auto.orders(master_id);
+CREATE INDEX idx_orders_status ON moto_auto.orders(status);
+CREATE INDEX idx_orders_order_date ON moto_auto.orders(order_date);
+
+CREATE INDEX idx_order_service_order_id ON moto_auto.order_service(order_id);
+CREATE INDEX idx_order_service_service_id ON moto_auto.order_service(service_id);
+
+-- Индексы для расписания
+CREATE INDEX idx_schedule_client_id ON moto_auto.schedule(client_id);
+CREATE INDEX idx_schedule_branch_id ON moto_auto.schedule(branch_id);
+CREATE INDEX idx_schedule_order_id ON moto_auto.schedule(order_id);
+CREATE INDEX idx_schedule_status ON moto_auto.schedule(status);
+
 -- TEST
 INSERT INTO moto_auto.branch (address, phone_number, postal_code, employee_count, city)
 VALUES 
