@@ -10,7 +10,7 @@ use crate::web::api::common::get_user_id;
 use crate::web::front::views::AdminIndex;
 use crate::{models::User, web::session::Cache};
 
-use super::views::{Login, ManagerIndex, ManagerOrderView, MasterIndex, OrderEdit, UserEdit};
+use super::views::{AnalystIndex, Login, ManagerIndex, ManagerOrderView, MasterIndex, OrderEdit, UserEdit};
 
 pub async fn login() -> Login {
     Login {}
@@ -68,4 +68,9 @@ pub async fn manager_index(
 
 pub async fn order_edit(Query(order): Query<Order>) -> ManagerOrderView {
     ManagerOrderView { order }
+}
+
+pub async fn analyst_index(
+) -> Result<AnalystIndex, StatusCode> {
+    return Ok(AnalystIndex{})
 }
