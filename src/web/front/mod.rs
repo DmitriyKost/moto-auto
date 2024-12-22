@@ -1,6 +1,6 @@
 use axum::{routing::get, Router};
 use handlers::{
-    admin_index, login, manager_index, master_index, order_edit, order_view, user_edit,
+    admin_index, analyst_index, login, manager_index, master_index, order_edit, order_view, user_edit
 };
 
 mod handlers;
@@ -18,6 +18,8 @@ pub fn new_front_router() -> Router {
 
     let manager_router = Router::new().route("/", get(manager_index));
 
+    let analyst_router = Router::new().route("/", get(analyst_index));
+
     let default_router = Router::new().route("/login", get(login));
 
     Router::new()
@@ -25,5 +27,6 @@ pub fn new_front_router() -> Router {
         .nest("/master", master_router)
         .nest("/views/", view_router)
         .nest("/manager", manager_router)
+        .nest("/analyst", analyst_router)
         .nest("/", default_router)
 }

@@ -2,7 +2,6 @@ use askama_axum::Template;
 
 use crate::models::{Order, User};
 
-
 #[derive(Template)]
 #[template(path = "login.html")]
 pub struct Login {}
@@ -42,3 +41,7 @@ pub struct ManagerIndex {
 pub struct ManagerOrderView {
     pub order: Order,
 }
+
+#[derive(Template)]
+#[template(path = "analyst/base.html")]
+pub struct AnalystIndex {}
