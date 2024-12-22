@@ -301,9 +301,9 @@ VALUES
 INSERT INTO moto_auto.users (username, passwordhash, role, branch_id)
 VALUES
 ('admin1', 'b56a96a2daa2d0e13bfed0ab5ed2e56fd2152682e8b078515e6058f0f301a059', 'admin', 1),
-('analyst1', 'password_hash2', 'analyst', 2),
-('manager1', 'password_hash3', 'manager', 3),
-('master1', 'password_hash4', 'master', 1);
+('analyst1', 'fb82425cada0f96011ed8e2cdf25679de1168752877d636858dac6b6eb2c7559', 'analyst', 1),
+('manager1', 'b1ba652e4797e6d49d92c0a48dfaaf2ad4168e3ebc028218cab7a959f0985472', 'manager', 1),
+('master1', '68156596aacb0217cba4ee279dfcb95a55eec84c0dcb24ec5d17f97e860b48e1', 'master', 1);
 
 INSERT INTO moto_auto.employee (name, age, position, contact_info, expirience_years, salary, description)
 VALUES

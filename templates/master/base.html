@@ -3,20 +3,17 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Admin</title>
+        <title>Master</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <script src="https://unpkg.com/htmx.org@2.0.4" integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+" crossorigin="anonymous"></script>
         <script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
     </head>
     <body>
         <div class="flex flex-col min-h-screen">
-            <form action="/api/v1/login" method="POST" class="flex flex-col place-items-center gap-2">
-                <label for="login">Login:</label>
-                <input type="text" name="login" class="bg-cyan-100 rounded-lg">
-                <label for="login">Password:</label>
-                <input type="text" name="password" class="bg-cyan-100 rounded-lg">
-                <button type="submit" class="bg-cyan-600 w-64 rounded-lg">login</button>
-            </form>
+            <div class="flex flex-row gap-4">
+                {% include "order_list.html" %}
+                <div id="order_view"/>
+            </div>
         </div>
     </body>
 </html>
