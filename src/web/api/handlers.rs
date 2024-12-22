@@ -1,16 +1,15 @@
-use axum::{debug_handler, http::StatusCode, response::Redirect, Extension, Form, Json};
+use axum::{http::StatusCode, response::Redirect, Extension, Form, Json};
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use tower_sessions::Session;
 use uuid::Uuid;
 
 use crate::{
-    cache,
     database::{
-        orders::update_order,
+        orders::{create_order, update_order},
         user::{create_user, get_user, update_user},
     },
-    models::User,
+    models::{Order, User},
     web::session::{ApiKey, Cache, API_KEY},
 };
 
@@ -54,7 +53,6 @@ pub async fn admin_update_user(
     cache: Extension<Cache>,
     Form(user): Form<User>,
 ) -> Result<Json<User>, StatusCode> {
-    log::error!("Fuck");
     let mut new_passwordhash: Option<String> = None;
     if !user.passwordhash.is_empty() {
         new_passwordhash = Some(sha256::digest(&user.passwordhash));
@@ -111,4 +109,14 @@ pub async fn master_complete_order(
         }
     }
     return Err(StatusCode::UNAUTHORIZED);
+}
+
+pub async fn manager_edit_order(db: Extension<PgPool>, cache: Extension<Cache>, session: Session, Form(order): Form<Order>) -> Result<(), StatusCode>{
+    if let Ok(Some(_)) = get_user_id(cache, session).await {
+        if let Ok(_) = create_order(&db, order).await {
+            return Ok(());
+        }
+        return Err(StatusCode::BAD_REQUEST);
+    }
+    return Err(StatusCode::BAD_REQUEST);
 }

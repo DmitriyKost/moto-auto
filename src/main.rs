@@ -1,7 +1,6 @@
 mod database;
 mod models;
 mod web;
-mod cache;
 use sqlx::PgPool;
 use web::serve;
 

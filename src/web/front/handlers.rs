@@ -1,6 +1,5 @@
 use axum::http::StatusCode;
 use axum::{extract::Query, Extension};
-use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use tower_sessions::Session;
 
@@ -11,7 +10,7 @@ use crate::web::api::common::get_user_id;
 use crate::web::front::views::AdminIndex;
 use crate::{models::User, web::session::Cache};
 
-use super::views::{Login, MasterIndex, OrderEdit, UserEdit};
+use super::views::{Login, ManagerIndex, ManagerOrderView, MasterIndex, OrderEdit, UserEdit};
 
 pub async fn login() -> Login {
     Login {}
@@ -42,7 +41,6 @@ pub async fn master_index(
 ) -> Result<MasterIndex, StatusCode> {
     if let Ok(Some(user_id)) = get_user_id(cache, session).await {
         if let Ok(orders) = get_orders(&db, None, Some(user_id), None).await {
-            tracing::info!("{:?}", user_id);
             return Ok(MasterIndex { orders });
         }
         return Err(StatusCode::INTERNAL_SERVER_ERROR);
@@ -50,7 +48,24 @@ pub async fn master_index(
     Err(StatusCode::INTERNAL_SERVER_ERROR)
 }
 
-pub async fn order_edit(Query(order): Query<Order>) -> OrderEdit {
-    let st = order.total_amount.clone().unwrap_or_default();
+pub async fn order_view(Query(order): Query<Order>) -> OrderEdit {
     OrderEdit { order }
+}
+
+pub async fn manager_index(
+    db: Extension<PgPool>,
+    session: Session,
+    cache: Extension<Cache>,
+) -> Result<ManagerIndex, StatusCode> {
+    if let Ok(Some(user_id)) = get_user_id(cache, session).await {
+        if let Ok(orders) = get_orders(&db, None, Some(user_id), None).await {
+            return Ok(ManagerIndex { orders });
+        }
+        return Err(StatusCode::INTERNAL_SERVER_ERROR);
+    }
+    Err(StatusCode::INTERNAL_SERVER_ERROR)
+}
+
+pub async fn order_edit(Query(order): Query<Order>) -> ManagerOrderView {
+    ManagerOrderView { order }
 }

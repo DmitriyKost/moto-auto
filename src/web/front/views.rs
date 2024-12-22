@@ -30,3 +30,15 @@ pub struct MasterIndex {
 pub struct OrderEdit {
     pub order: Order,
 }
+
+#[derive(Template)]
+#[template(path = "manager/base.html")]
+pub struct ManagerIndex {
+    pub orders: Vec<Order>,
+}
+
+#[derive(Template)]
+#[template(path = "manager/order_edit.html")]
+pub struct ManagerOrderView {
+    pub order: Order,
+}
