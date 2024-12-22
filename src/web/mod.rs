@@ -4,6 +4,7 @@ use front::new_front_router;
 use middlewares::auth_middleware;
 use session::Cache;
 use sqlx::PgPool;
+use tokio_cron_scheduler::{Job, JobScheduler};
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
 use tower_sessions::{MemoryStore, SessionManagerLayer};
@@ -34,11 +35,31 @@ pub async fn serve(db: PgPool, addr: &str) -> Result<(), WebError> {
         .layer(
             ServiceBuilder::new()
                 .layer(TraceLayer::new_for_http())
-                .layer(Extension(db))
+                .layer(Extension(db.clone()))
                 .layer(Extension(cache))
                 .layer(session_layer)
                 .layer(middleware::from_fn(auth_middleware))
         );
+
+    let scheduler = JobScheduler::new().await.unwrap();
+    
+    scheduler.add(
+        Job::new_async("0 0 1 1 * *", move |_uuid, _l| {
+            let pool = db.clone(); 
+            Box::pin(async move {
+                if let Err(e) = sqlx::query("SELECT expire_bonus_points()")
+                    .execute(&pool)
+                    .await
+                {
+                    eprintln!("Error executing expire_bonus_points: {:?}", e);
+                } else {
+                    println!("Bonus points expired successfully!");
+                }
+            })
+        }).unwrap()
+    ).await.unwrap();
+
+    scheduler.start().await.unwrap();
 
     let listener = tokio::net::TcpListener::bind(addr)
         .await
