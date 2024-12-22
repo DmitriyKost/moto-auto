@@ -1,5 +1,5 @@
 <div class="flex-grow flex flex-col">
-    <ul class="flex flex-col gap-2">
+    <ul class="flex flex-col gap-2 place-items-center">
     {% for order in orders %}
         <li 
             hx-get="/views/order_edit?order_id={{order.order_id.unwrap_or_default()}}&client_id={{order.client_id}}&branch_id={{order.branch_id}}&master_id={{order.master_id}}&order_date={{order.order_date}}&completion_date={{order.completion_date.unwrap_or_default()}}&total_amount={{order.total_amount.clone().unwrap_or_default()}}&status={{order.status}}"
