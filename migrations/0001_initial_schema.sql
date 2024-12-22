@@ -278,7 +278,7 @@ GRANT UPDATE, INSERT ON moto_auto.orders TO master;
 -- В целях безопасности, мастера могут видеть в информационной системе только тех клиентов, с которыми они работают.
 ALTER TABLE moto_auto.client ENABLE ROW LEVEL SECURITY;
 CREATE POLICY master_client_policy ON moto_auto.client
-    FOR SELECT USING (
+    FOR SELECT TO master USING (
         EXISTS (
             SELECT 1
             FROM moto_auto.orders
@@ -293,7 +293,7 @@ CREATE POLICY master_client_policy ON moto_auto.client
 
 ALTER TABLE moto_auto.orders ENABLE ROW LEVEL SECURITY;
 CREATE POLICY master_orders_policy ON moto_auto.orders
-    FOR ALL USING (
+    FOR ALL TO master USING (
         moto_auto.orders.master_id = (
             SELECT user_id
             FROM moto_auto.users
@@ -303,7 +303,7 @@ CREATE POLICY master_orders_policy ON moto_auto.orders
 
 -- Менеджеры имеют доступ к информации о клиентах, заказах и чеках, могут добавлять новых клиентов и управлять заказами того автосервиса, в котором числятся менеджерами. 
 CREATE POLICY manager_client_policy ON moto_auto.client
-    FOR ALL USING (
+    FOR ALL TO manager USING (
         EXISTS (
             SELECT 1
             FROM moto_auto.users
@@ -316,7 +316,7 @@ CREATE POLICY manager_client_policy ON moto_auto.client
     );
 
 CREATE POLICY manager_orders_policy ON moto_auto.orders
-    FOR ALL USING (
+    FOR ALL TO manager USING (
         moto_auto.orders.branch_id = (
             SELECT branch_id
             FROM moto_auto.users
@@ -327,7 +327,7 @@ CREATE POLICY manager_orders_policy ON moto_auto.orders
 -- Администраторы имеют полный доступ к системе, того автосервиса, где числятся администраторами.
 ALTER TABLE moto_auto.users ENABLE ROW LEVEL SECURITY;
 CREATE POLICY admin_user_policy ON moto_auto.users
-    FOR ALL USING (
+    FOR ALL TO admin USING (
         moto_auto.users.branch_id = (
             SELECT branch_id
             FROM moto_auto.users
