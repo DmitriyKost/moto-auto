@@ -5,7 +5,11 @@ use tower_sessions::Session;
 use uuid::Uuid;
 
 use crate::{
-    database::user::{create_user, get_user, update_user},
+    cache,
+    database::{
+        orders::update_order,
+        user::{create_user, get_user, update_user},
+    },
     models::User,
     web::session::{ApiKey, Cache, API_KEY},
 };
@@ -28,15 +32,17 @@ pub async fn login(
         if sha256::digest(&login.password) == user.passwordhash {
             let apikey = ApiKey(Uuid::new_v4().to_string());
             session.insert(API_KEY, &apikey).await.unwrap();
-            cache.write().unwrap().insert(apikey.0, user.user_id.unwrap().to_string());
+            cache
+                .write()
+                .unwrap()
+                .insert(apikey.0, user.user_id.unwrap().to_string());
             match user.role.as_ref() {
                 "admin" => return Redirect::to("/admin"),
                 "master" => return Redirect::to("/master"),
                 "analyst" => return Redirect::to("/analyst"),
                 "manager" => return Redirect::to("/manager"),
-                _ => return Redirect::to("/login")
+                _ => return Redirect::to("/login"),
             }
-            
         }
     }
     Redirect::to("/login")
@@ -76,4 +82,33 @@ pub async fn admin_update_user(
         }
     }
     Err(StatusCode::UNAUTHORIZED)
+}
+
+#[derive(Deserialize)]
+pub struct OrderCompleteForm {
+    pub order_id: i32,
+}
+
+pub async fn master_complete_order(
+    db: Extension<PgPool>,
+    cache: Extension<Cache>,
+    session: Session,
+    Form(form): Form<OrderCompleteForm>,
+) -> Result<(), StatusCode> {
+    if let Ok(Some(user_id)) = get_user_id(cache, session).await {
+        if let Ok(_) = update_order(
+            &db,
+            Some(user_id),
+            Some(chrono::offset::Utc::now()),
+            Some("finished".to_string()),
+            form.order_id,
+        )
+        .await
+        {
+            return Ok(());
+        } else {
+            return Err(StatusCode::BAD_REQUEST);
+        }
+    }
+    return Err(StatusCode::UNAUTHORIZED);
 }
