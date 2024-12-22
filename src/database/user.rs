@@ -33,9 +33,6 @@ pub async fn create_user(
     admin_branch_id: i32,
     user: &User,
 ) -> Result<User, DbError> {
-    if let Err(err) = admin_branch_check(pool, admin_branch_id, user.username.as_str()).await {
-        return Err(err);
-    }
     sqlx::query_as!(
         User,
         r#"
