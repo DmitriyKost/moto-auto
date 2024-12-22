@@ -1,0 +1,20 @@
+<div class="flex-grow flex flex-col place-items-center" hx-include="this">
+    <input type="text" value="{{ order.order_id.unwrap_or_default() }}" id="order_id" name="order_id" class="bg-cyan-100 rounded-lg er-cyan-400 collapse" readonly/>
+    <label for="client_id">client_id:</label>
+    <input type="text" value="{{ order.client_id }}" id="client_id" name="client_id" class="bg-cyan-100 rounded-lg er-cyan-400" />
+    <label for="branch_id">branch_id:</label>
+    <input type="text" value="{{ order.branch_id }}" id="branch_id" name="branch_id" class="bg-cyan-100 rounded-lg er-cyan-400" />
+    <label for="master_id">master_id:</label>
+    <input type="text" value="{{ order.master_id }}" id="master_id" name="master_id" class="bg-cyan-100 rounded-lg er-cyan-400" />
+    <label for="order_date">order_date:</label>
+    <input type="text" value="{{ order.order_date }}" id="order_date" name="order_date" class="bg-cyan-100 rounded-lg er-cyan-400" />
+    <input type="text" value="{{ order.completion_date.unwrap_or_default() }}" id="completion_date" name="completion_date" class="bg-cyan-100 rounded-lg er-cyan-400 collapse" />
+    <input type="text" value="{{ order.total_amount.clone().unwrap_or_default() }}" id="total_amount" name="total_amount" class="bg-cyan-100 rounded-lg er-cyan-400 collapse" />
+    <input type="text" value="{{ order.status }}" id="status" name="status" class="bg-cyan-100 rounded-lg er-cyan-400 collapse" readonly/>
+    <button type="button" 
+        hx-post="/api/v1/manager/edit_order?order_id={{order.order_id.unwrap_or_default()}}&client_id={{order.client_id}}&branch_id={{order.branch_id}}&master_id={{order.master_id}}&order_date={{order.order_date}}&completion_date={{order.completion_date.unwrap_or_default()}}&total_amount={{order.total_amount.clone().unwrap_or_default()}}&status={{order.status}}"
+        class="rounded-lg bg-cyan-600 w-full">
+        Create Order
+    </button>
+</div>
+
