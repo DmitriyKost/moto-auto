@@ -50,7 +50,7 @@ pub struct Client {
     pub total_spent: BigDecimal,
 }
 
-#[derive(Debug, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
 pub struct Order {
     pub order_id: Option<i32>,
     pub client_id: i32,

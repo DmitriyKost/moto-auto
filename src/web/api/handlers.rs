@@ -112,8 +112,10 @@ pub async fn master_complete_order(
 }
 
 pub async fn manager_edit_order(db: Extension<PgPool>, cache: Extension<Cache>, session: Session, Form(order): Form<Order>) -> Result<(), StatusCode>{
+    let mut fixed_order = order.clone();
+    fixed_order.completion_date = None;
     if let Ok(Some(_)) = get_user_id(cache, session).await {
-        if let Ok(_) = create_order(&db, order).await {
+        if let Ok(_) = create_order(&db, fixed_order).await {
             return Ok(());
         }
         return Err(StatusCode::BAD_REQUEST);
